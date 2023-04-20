@@ -67,7 +67,7 @@ public class Engine implements Player {
             int[] bestMove = findBestMove(gameState, depth);
             result = bestMove;
             lastDepth = depth;
-            depth+=2;
+            depth+=1;
         }
     }
 
@@ -97,6 +97,13 @@ public class Engine implements Player {
         //find the best move
         for (int[] move:  gameLogic.getAllAvailableMoves(gameState))
         {
+
+            //if the move is certain, return it
+            if(gameLogic.certainMove(gameState,move))
+            {
+                return move;
+            }
+
             //make a copy of the game state and make the move
             GameLogic.GameState newGameState = gameState.copy();
             gameLogic.makeMove(newGameState,move);
@@ -113,6 +120,7 @@ public class Engine implements Player {
 //            System.out.println("Move: "+move[0]+" "+move[1]+" Score: "+bestScore+" Strategy: "+currentStrategy);
 
         }
+//        System.out.println("Best move: "+bestMove[0]+" "+bestMove[1] + " Best score: "+bestScore);
 //
         return bestMove;
     }
@@ -140,25 +148,25 @@ public class Engine implements Player {
         //if the depth is 0 or the game is over, return the score of the game state
         if(depth==0 || gameLogic.isOver(gameState))
         {
-            if (currentPlayer != gameState.getCurrentPlayer())
-            {
-                return  isMaxLevel ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-            }
-            return  gameLogic.getScoreForGameState(gameState,strategy);
+            return  gameLogic.getScoreForGameState(gameState,strategy,currentPlayer);
         }
 
             //find the best score
+
             for (int[] move:  gameLogic.getAllAvailableMoves(gameState))
             {
                 //make a copy of the game state and make the move
                 GameLogic.GameState newGameState = gameState.copy();
-                gameLogic.makeMove(newGameState,move);
+                newGameState = gameLogic.makeMove(newGameState,move);
 
                 //count the visited nodes
                 countOfVisitedNodes++;
 
+                //if player changed, we need to change the isMaxLevel
+                boolean newMaxLevel = gameState.getCurrentPlayer() == newGameState.getCurrentPlayer() ? isMaxLevel : !isMaxLevel;
+
                 //find the score of the move
-                int score = alphaBetaMinMax(newGameState,depth-1,alpha,beta,!isMaxLevel,strategy);
+                int score = alphaBetaMinMax(newGameState,depth-1,alpha,beta,newMaxLevel,strategy);
 
                 //if the score is better than the best score, update the best score
                 if(isMaxLevel) {
@@ -191,6 +199,13 @@ public class Engine implements Player {
                     }
 
                 }
+                String s = "";
+                for(int j = 0; j < 7-depth; j++)
+                {
+                    s+=" ";
+                }
+                s += "Move: "+move[0]+" "+move[1]+" Score: "+score+" BestScore: "+bestScoreOnLevel+" Depth: "+depth+"  isMaxLevel: "+isMaxLevel+"                  Strategy: "+strategy+" Alpha: "+alpha+" Beta: "+beta;
+//                System.out.println(s);
             }
 
         return bestScoreOnLevel;

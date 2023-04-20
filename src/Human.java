@@ -97,6 +97,8 @@ public class Human implements Player{
          *  **/
 
         input = new Scanner(System.in);
+        input.reset();
+
 
         int[] move = new int[2];
         try {

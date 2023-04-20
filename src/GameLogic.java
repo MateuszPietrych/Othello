@@ -427,8 +427,6 @@ public class GameLogic {
 
         //set board from game state
         int[][] board = gameState.getBoard();
-        //set current player from game state
-        int currentPlayer = gameState.getCurrentPlayer();
 
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
@@ -442,9 +440,18 @@ public class GameLogic {
     }
 
 
+    public boolean certainMove(GameState gameState,int[] move)
+    {
+        if((move[0] == 0 && move[1] == 0) || (move[0] == 0 && move[1] == BOARD_SIZE-1)
+                || (move[0] == BOARD_SIZE-1 && move[1] == 0) || (move[0] == BOARD_SIZE-1 && move[1] == BOARD_SIZE-1))
+        {
+            return true;
+        }
+        return false;
+    }
 
 
-    public int getScoreForGameState(GameLogic.GameState  gameState, int strategy)
+    public int getScoreForGameState(GameLogic.GameState  gameState, int strategy, int player)
     {
         /** This function returns the score of the game state
          *  It uses the strategy manager or the strategy from player
@@ -459,22 +466,22 @@ public class GameLogic {
         switch (strategy)
         {
             case 0:
-                return getScoreByDiffrenceBetweenBlackAndWhite(gameState);
+                return getScoreByDiffrenceBetweenBlackAndWhite(gameState, player);
 
             case 1:
-                return getScoreByCloseToSides(gameState);
+                return getScoreByCloseToSides(gameState, player);
 
             case 2:
-                return getScoreByCorners(gameState);
+                return getScoreByCorners(gameState, player);
 
             case 3:
-                return getScoreByStability(gameState) + getScoreByCorners(gameState)*15;
+                return getScoreByStability(gameState, player) + getScoreByCorners(gameState, player)*15;
 
             case 4:
-                return getScoreByMobility(gameState) + getScoreByCorners(gameState)*30;
+                return getScoreByMobility(gameState, player)  + getScoreByCorners(gameState, player)*20;
 
             case 5:
-                return getScoreByStability(gameState)*2 + getScoreByCorners(gameState)*30 +getScoreByMobility(gameState);
+                return getScoreByStability(gameState, player)*2 + getScoreByCorners(gameState, player)*30 +getScoreByMobility(gameState, player);
 
             default:
                 return 0;
@@ -515,12 +522,12 @@ public class GameLogic {
             return 0;
         }
         //if player mobility is very low
-        else if(getScoreByMobility(gameState)<=MIN_MOBILITY_NEEDED)
+        else if(getScoreByMobility(gameState,gameState.getCurrentPlayer())<=MIN_MOBILITY_NEEDED)
         {
             return 4;
         }
         //if player mobility is very high
-        else if(getScoreByMobility(gameState)>=MAX_MOBILITY_NEEDED)
+        else if(getScoreByMobility(gameState,gameState.getCurrentPlayer())>=MAX_MOBILITY_NEEDED)
         {
             return 3;
         }
@@ -531,7 +538,7 @@ public class GameLogic {
         }
     }
 
-    private int getScoreByDiffrenceBetweenBlackAndWhite(GameLogic.GameState gameState)
+    private int getScoreByDiffrenceBetweenBlackAndWhite(GameLogic.GameState gameState, int player)
     {
         /** This function returns the score of the game state by the diffrence between black and white
          *
@@ -541,7 +548,7 @@ public class GameLogic {
          * returns:
          *   the score of the game state by the diffrence between black and white
          *  **/
-        if(this.translatePlayer(gameState.getCurrentPlayer()) == "Black")
+        if(this.translatePlayer(player) == "Black")
         {
             return gameState.getBlackCount()- gameState.getWhiteCount();
         }
@@ -551,7 +558,7 @@ public class GameLogic {
         }
     }
 
-    private int getScoreByCloseToSides(GameLogic.GameState gameState)
+    private int getScoreByCloseToSides(GameLogic.GameState gameState, int player)
     {
         /** This function returns the score of the game state by the number of pieces that are close to the sides
          *
@@ -562,12 +569,12 @@ public class GameLogic {
          *   the score of the game state by the number of pieces that are close to the sides
          *  **/
         int counterBySide = 0;
-        for (int i = 0; i < this.getBOARD_SIZE(); i++) {
-            for (int j = 0; j < this.getBOARD_SIZE(); j++)
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++)
             {
                 //if the piece is close to the sides
-                if (this.translatePlayer(gameState.getBoard()[i][j]) == this.translatePlayer(gameState.getCurrentPlayer())
-                        && (i == 0 || i == this.getBOARD_SIZE() - 1 || j == 0 || j == this.getBOARD_SIZE() - 1))
+                if (gameState.getBoard()[i][j] == player
+                        && (i == 0 || i == BOARD_SIZE - 1 || j == 0 || j == BOARD_SIZE - 1))
                 {
                     counterBySide++;
                 }
@@ -576,7 +583,7 @@ public class GameLogic {
         return counterBySide;
     }
 
-    private int getScoreByCorners(GameLogic.GameState gameState)
+    private int getScoreByCorners(GameLogic.GameState gameState, int player)
     {
         /** This function returns the score of the game state by the number of pieces that are in the corners
          *
@@ -587,12 +594,12 @@ public class GameLogic {
          *   the score of the game state by the number of pieces that are in the corners
          *  **/
         int counterInCorner = 0;
-        counterInCorner += gameState.getBoard()[0][0] == gameState.getCurrentPlayer() ? 1 : 0;
-        counterInCorner += gameState.getBoard()[0][BOARD_SIZE - 1] == gameState.getCurrentPlayer() ? 1 : 0;
-        counterInCorner += gameState.getBoard()[BOARD_SIZE - 1][0] == gameState.getCurrentPlayer() ? 1 : 0;
-        counterInCorner += gameState.getBoard()[BOARD_SIZE - 1][BOARD_SIZE - 1] == gameState.getCurrentPlayer() ? 1 : 0;
+        counterInCorner += gameState.getBoard()[0][0] == player ? 1 : 0;
+        counterInCorner += gameState.getBoard()[0][BOARD_SIZE - 1] == player ? 1 : 0;
+        counterInCorner += gameState.getBoard()[BOARD_SIZE - 1][0] == player ? 1 : 0;
+        counterInCorner += gameState.getBoard()[BOARD_SIZE - 1][BOARD_SIZE - 1] == player ? 1 : 0;
 
-        int otherPlayer = gameState.getCurrentPlayer() == 1 ? 2 : 1;
+        int otherPlayer = player == 1 ? 2 : 1;
         counterInCorner += gameState.getBoard()[0][0] == otherPlayer ? -1 : 0;
         counterInCorner += gameState.getBoard()[0][BOARD_SIZE - 1] == otherPlayer ? -1 : 0;
         counterInCorner += gameState.getBoard()[BOARD_SIZE - 1][0] == otherPlayer ? -1 : 0;
@@ -600,7 +607,7 @@ public class GameLogic {
         return counterInCorner;
     }
 
-    private int getScoreByMobility(GameLogic.GameState gameState)
+    private int getScoreByMobility(GameLogic.GameState gameState, int player)
     {
         /** This function returns the score of the game state by the number of available moves
          *
@@ -610,10 +617,10 @@ public class GameLogic {
          * returns:
          *   the score of the game state by the number of available moves
          *  **/
-        return this.getAllAvailableMoves(gameState).size();
+        return gameState.getCurrentPlayer() == player ? getAllAvailableMoves(gameState).size() : -getAllAvailableMoves(gameState).size();
     }
 
-    public int getScoreByStability(GameLogic.GameState gameState)
+    public int getScoreByStability(GameLogic.GameState gameState, int player)
     {
         /** This function returns the score of the game state by the number of stable pieces
          *
@@ -643,7 +650,7 @@ public class GameLogic {
         for (int[] corner : cornersInfo) {
 
             // check if corner same color as current player and stable
-            if(gameState.getBoard()[corner[0]][corner[1]] == gameState.getCurrentPlayer())
+            if(gameState.getBoard()[corner[0]][corner[1]] == player)
             {
                 stablePieces[corner[0]][corner[1]] = 1;
                 stablePiecesCounter++;
@@ -668,7 +675,7 @@ public class GameLogic {
                     {
                         // add the piece to the list of stable pieces
                         stablePieces[x][y] = 1;
-                        stablePiecesCounter += gameState.getBoard()[x][y]==gameState.getCurrentPlayer() ? 1 : -1;
+                        stablePiecesCounter += gameState.getBoard()[x][y]==player ? 1 : -1;
                         ifMoreStable = true;
                     }
 
@@ -680,7 +687,7 @@ public class GameLogic {
                     {
                         // add the piece to the list of stable pieces
                         stablePieces[x][y] = 1;
-                        stablePiecesCounter += gameState.getBoard()[x][y]==gameState.getCurrentPlayer() ? 1 : -1;
+                        stablePiecesCounter += gameState.getBoard()[x][y]==player ? 1 : -1;
                         ifMoreStable = true;
                     }
                 }

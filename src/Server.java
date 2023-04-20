@@ -192,6 +192,7 @@ public class Server {
             System.out.println(gameLogic.getBoardToDisplay(gameState));
             System.out.println("Current Player: "+gameLogic.translatePlayer(gameState.getCurrentPlayer()));
             System.out.println("Black: "+gameState.getBlackCount()+" White: "+gameState.getWhiteCount());
+            System.out.println("Strategy: "+gameLogic.strategyManager(gameState,8));
 
             // start the thread for the current player
             Thread thread1 = new Thread(currentPlayer);
